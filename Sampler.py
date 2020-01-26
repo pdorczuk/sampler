@@ -123,7 +123,7 @@ def write_request_list(request_data, client_name):
                         continue
             if row[0].value is not None:
                 row_num += 1
-    wb.save(client_name + '-Requests.xlsx')
+    wb.save(client_name + ' - AuditSource Request List.xlsx')
 
 
 def write_tracking_spreadsheet_hosts(request_data, irl_references, client_name, inventory, audit_type):
@@ -182,7 +182,7 @@ def write_tracking_spreadsheet_hosts(request_data, irl_references, client_name, 
                 except AttributeError:
                     pass
 
-    wb.save(client_name + '-Tracking.xlsx')
+    wb.save(client_name + '- System Evidence Tracking.xlsx')
 
 
 # Constants

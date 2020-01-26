@@ -7,8 +7,8 @@ __pycache__/
 *.so
 
 # Output files
-*-Tracking.xlsx
-*-Requests.xlsx
+*System Evidence Tracking.xlsx.xlsx
+*AuditSource Request List.xlsx
 
 # Distribution / packaging
 .Python
