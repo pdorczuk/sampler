@@ -14,11 +14,13 @@ import random
 import itertools
 
 # Prod runs as an exe so the filepaths need to be set differently. Test uses the script directory.
-if getattr(sys, 'frozen', False): # We are running from an exe
-    Tk().withdraw() # Don't need a full GUI, so keep the root window from appearing    
-    inventory_file = askopenfilename() # Open a file-browser to select the input file and return the path
+if getattr(sys, 'frozen', False):  # We are running from an exe
+    Tk().withdraw()  # Don't need a full GUI, so keep the root window from appearing
+    # Open a file-browser to select the input file and return the path
+    inventory_file = askopenfilename()
     base_path = sys._MEIPASS
-    database_file = os.path.join(base_path, 'requests.xlsx') # this file is embedded in the EXE file
+    # this file is embedded in the EXE file
+    database_file = os.path.join(base_path, 'requests.xlsx')
 else:
     inventory_file = 'example_input.xlsx'  # testing input file
     database_file = 'requests.xlsx'
@@ -28,7 +30,8 @@ def main():
     inventory, client_name, audit_type = read_inventory(inventory_file)
     request_data, irl_references = create_request_list(inventory, audit_type)
     write_request_list(request_data, client_name)
-    write_tracking_spreadsheet_hosts(request_data, irl_references, client_name, inventory, audit_type)
+    write_tracking_spreadsheet_hosts(
+        request_data, irl_references, client_name, inventory, audit_type)
 
 
 def read_inventory(inventory_file):
@@ -46,14 +49,17 @@ def read_inventory(inventory_file):
     supported_audit_types = ['PCI', 'ISO', 'SOC', 'HIPAA', 'HITRUST']
     if audit_type not in map(str.upper, supported_audit_types):
         wb, sheet = open_report_workbook()
-        sheet.cell(row=1, column=1).value = 'Unsupported audit type entered. Use a valid type as noted in the input template.'
+        sheet.cell(
+            row=1, column=1).value = 'Unsupported audit type entered. Use a valid type as noted in the input template.'
         wb.save(client_name + '-Requests.xlsx')
- 
+
     # Read the inventory platforms and hostnames
     for row in sheet.iter_rows(min_col=1, min_row=9, max_col=2, max_row=sheet.max_row):
         if row[0].value is not None:
-            if row[:1][0].value in inventory.keys(): # Slice cell A from row tuple to form the key
-                inventory[row[:1][0].value] += [row[1:2][0].value] # Slice cell B from row tuple to form the value
+            # Slice cell A from row tuple to form the key
+            if row[:1][0].value in inventory.keys():
+                # Slice cell B from row tuple to form the value
+                inventory[row[:1][0].value] += [row[1:2][0].value]
             else:
                 inventory[row[:1][0].value] = [row[1:2][0].value]
     return inventory, client_name, audit_type
@@ -67,16 +73,16 @@ def create_request_list(inventory, audit_type):
     request_data = {}
     irl_references = defaultdict(list)
     wb = openpyxl.load_workbook(database_file, read_only=True, data_only=True)
-        
+
     counter = 1
-    for k,v in inventory.items():
+    for k, v in inventory.items():
         ''' The requests database has a tab per platform with all the requests in it. so this section iterates through each dictionary key and checks if there is a corresponding tab in the spreadsheet. If there is it grabs the info and if there is no match then the generic tab is used as a catchall. '''
         sheet = ''
         if k in wb.sheetnames:
             sheet = wb[k]
         else:
             sheet = wb['generic']
-        
+
         audit_columns = set()
         for row in sheet.iter_rows(min_col=1, min_row=1, max_col=sheet.max_column, max_row=sheet.max_row):
             request_data[counter] = {}
@@ -88,9 +94,10 @@ def create_request_list(inventory, audit_type):
                         if 'Global' in cell.value or audit_type in cell.value:
                             audit_columns.add(cell.column)
                     else:
-                        # TODO create nested dict with ref as dict name and all other columns as values with the header as the key                    
+                        # TODO create nested dict with ref as dict name and all other columns as values with the header as the key
                         if cell.column in audit_columns:
-                            request_data[counter][(sheet.cell(1, cell.column).value)] = str(cell.value).replace('%%', ", ".join(v))
+                            request_data[counter][(sheet.cell(1, cell.column).value)] = str(
+                                cell.value).replace('%%', ", ".join(v))
                         if 'Reference' in sheet.cell(1, cell.column).value:
                             for item in v:
                                 irl_references[item].append(cell.value)
@@ -100,7 +107,9 @@ def create_request_list(inventory, audit_type):
 
 def write_request_list(request_data, client_name):
     """ Writes the excel file with values to copy into AuditSource. """
-    column_headers = ['Title', 'Instructions', 'Due Date', 'Reference', 'Population Request', 'Evidence Form', 'Related Section(s)', 'Assignee 1', 'Assignee 2', 'Assignee 3', 'Assignee 4', 'Assignee 5', 'Project 1', 'Project 2', 'Project 3', 'Project 4', 'Project 5']
+    column_headers = ['Title', 'Instructions', 'Due Date', 'Reference', 'Population Request', 'Evidence Form',
+                      'Related Section(s)', 'Assignee 1', 'Assignee 2', 'Assignee 3', 'Assignee 4', 'Assignee 5', 
+                      'Project 1', 'Project 2', 'Project 3', 'Project 4', 'Project 5']
     wb = openpyxl.Workbook()
     sheet = wb.active
     sheet.title = 'Request List'
@@ -140,7 +149,6 @@ def write_tracking_spreadsheet_hosts(request_data, irl_references, client_name, 
             if len(host) > longest:
                 longest = len(host) + 3
 
-
     # Writes all the IRL references down the first column
     for item in sorted(set(re.findall(r'[A-Z]+\-[0-9]{3}', str(request_data)))):
         sheet.cell(row=row_num, column=1).value = item
@@ -163,13 +171,14 @@ def write_tracking_spreadsheet_hosts(request_data, irl_references, client_name, 
         color = random.choice(all_colors)
         all_colors.remove(color)
         for hostname in v:
-            column_num = format_hostname_row(column_num, hostname, color, longest)
+            column_num = format_hostname_row(
+                column_num, hostname, color, longest)
 
     ''' get list of all irl refs down the first column and iterate through the dictionaries in request_data
     and make a list of all the applicable IRL refs in each. then write N/A blocks on anything in the first column thats not
     on the list. basically, if its not applicable, then assume its not. '''
     hit_count = 0
-    for k,v in irl_references.items():
+    for k, v in irl_references.items():
         for row in sheet.iter_rows(min_col=2, min_row=2, max_col=sheet.max_column, max_row=sheet.max_row):
             for cell in row:
                 try:
