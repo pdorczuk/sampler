@@ -191,7 +191,7 @@ def write_tracking_spreadsheet_hosts(request_data, irl_references, client_name, 
                 except AttributeError:
                     pass
 
-    wb.save(client_name + '- System Evidence Tracking.xlsx')
+    wb.save(client_name + ' - System Evidence Tracking.xlsx')
 
 
 # Constants
